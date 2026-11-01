@@ -4,7 +4,7 @@ Last verified: 2026-11-01. These project facts supplement the user's global inst
 
 ## Product and layout
 
-Project Execution Visualizer is a desktop VS Code extension. src/ owns VS Code integration, discovery, graph analysis, diagnostics, and launch selection. webview/ owns the React Flow interface. runtime/ contains opt-in Node.js and Python profiling. sample/ contains synthetic demonstrations. test/ contains Node test-runner suites and real local runtime integration tests. media/bundle.js and media/bundle.css are generated and ignored.
+Code Execution Visualizer is a desktop VS Code extension. src/ owns VS Code integration, discovery, graph analysis, diagnostics, and launch selection. webview/ owns the React Flow interface. runtime/ contains opt-in Node.js and Python profiling. sample/ contains synthetic demonstrations. test/ contains Node test-runner suites and real local runtime integration tests. media/bundle.js and media/bundle.css are generated and ignored.
 
 ## Setup and commands
 
@@ -19,6 +19,7 @@ Use Node.js 24, npm with package-lock.json, and Python 3.12 for development. Pyt
 - Full tests: npm test
 - Focused test example: node --test test/graph.test.js
 - CI test reports: npm run test:ci
+- Package preview: npm run check:package (build first); VSCE prepublish: npm run vscode:prepublish
 - Run extension: press F5; .vscode/launch.json builds first and opens Extension Development Host.
 
 ESLint and Prettier are installed as explicitly approved development-only dependencies. ESLint enforces recommended checks, React hook correctness, and nearby JSDoc on exported functions/public class methods. Python public docstrings are checked by scripts/check_python.py. See the maintenance review for documented tooling advisories and cohesion exceptions.
@@ -37,6 +38,6 @@ ESLint and Prettier are installed as explicitly approved development-only depend
 
 Maintain dev_docs/ architecture, UML, flows, stories, product definition, patterns, and testing/delivery documents. Keep Q&A, plans, and prompt history only in ignored dev_docs/local_only/. Experimentation documentation was deferred at the user's request and resumed on 2026-11-01.
 
-.github/workflows/ci.yml defines local-equivalent gates; remote checks and branch protection have not been inspected or configured. Actions use reviewed major-version pins; npm dependencies use exact versions plus the lock file. No publication, deployment, migration, secrets store, or Marketplace release is configured.
+No CI workflow is currently present under .github/workflows at the latest packaging inspection. Local checks and test reporting remain available; remote checks and branch protection have not been inspected. npm dependencies use exact versions plus the lock file. package.json uses a files allowlist instead of .vscodeignore; do not combine the two. Keep bundled third-party notices and the MIT license in distributions. No automated publication, deployment, migration, secrets store, or Marketplace release is configured here.
 
 See [testing and delivery](dev_docs/07_testing_and_delivery.md) for category coverage, limits, safe environments, and unverified checks.

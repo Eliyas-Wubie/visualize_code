@@ -3,4 +3,6 @@ node_modules/
 __pycache__/
 media/bundle.js
 media/bundle.css
+media/THIRD_PARTY_NOTICES.txt
+*.vsix
 reports/

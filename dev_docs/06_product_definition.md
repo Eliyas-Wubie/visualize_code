@@ -2,7 +2,7 @@
 
 Last verified: 2026-11-01. Status: local VS Code extension prototype; not publicly released.
 
-Project Execution Visualizer helps developers understand how functions and classes in a repository connect, and where activity or problems appear while code runs.
+Code Execution Visualizer helps developers understand how functions and classes in a repository connect, and where activity or problems appear while code runs.
 
 ## Users and value
 

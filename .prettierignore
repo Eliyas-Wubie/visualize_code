@@ -2,6 +2,7 @@ node_modules/
 package-lock.json
 media/bundle.js
 media/bundle.css
+media/THIRD_PARTY_NOTICES.txt
 dev_docs/local_only/
 reports/
 __pycache__/

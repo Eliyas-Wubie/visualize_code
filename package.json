@@ -1,9 +1,33 @@
 {
-  "name": "visualize-code",
-  "displayName": "Project Execution Visualizer",
-  "description": "Explore possible execution paths from a starting function.",
-  "version": "0.0.1",
-  "publisher": "local-prototype",
+  "name": "visualized-code",
+  "displayName": "Code Execution Visualizer",
+  "description": "Visualize function calls, classes, and live execution across JavaScript, TypeScript, React, Next.js, and Python projects.",
+  "version": "0.0.3",
+  "icon": "media/icon.png",
+  "publisher": "lockitech",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Eliyas-Wubie/visualize_code.git"
+  },
+  "homepage": "https://github.com/Eliyas-Wubie/visualize_code#readme",
+  "bugs": {
+    "url": "https://github.com/Eliyas-Wubie/visualize_code/issues"
+  },
+  "files": [
+    "src/**/*.js",
+    "runtime/**/*.cjs",
+    "runtime/**/*.mjs",
+    "runtime/python/*.py",
+    "media/bundle.js",
+    "media/bundle.css",
+    "media/activity.svg",
+    "media/icon.png",
+    "media/THIRD_PARTY_NOTICES.txt",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -15,10 +39,12 @@
     "onView:visualizeCode.apps"
   ],
   "scripts": {
+    "vscode:prepublish": "npm run build && npm run check:package",
     "build": "node scripts/build.js",
     "check": "npm run check:syntax && npm run check:python",
     "check:syntax": "node scripts/check.js",
     "check:python": "python -B scripts/check_python.py",
+    "check:package": "node scripts/verify-package.js",
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -2,6 +2,7 @@ const esbuild = require('esbuild');
 const { resolve } = require('node:path');
 const { mkdirSync, readFileSync, writeFileSync } = require('node:fs');
 const { createHash } = require('node:crypto');
+const { writeThirdPartyNotices } = require('./third-party-notices');
 
 esbuild
   .build({
@@ -11,11 +12,13 @@ esbuild
     bundle: true,
     outfile: 'media/bundle.js',
     minify: true,
+    metafile: true,
     platform: 'browser',
     target: 'chrome120',
     define: { 'process.env.NODE_ENV': '"production"' },
   })
-  .then(() => {
+  .then((result) => {
+    writeThirdPartyNotices(result.metafile.inputs, 'media/THIRD_PARTY_NOTICES.txt');
     mkdirSync('reports', { recursive: true });
     const digest = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
     writeFileSync(

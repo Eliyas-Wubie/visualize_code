@@ -1,36 +1,53 @@
-# Project Execution Visualizer
+﻿**[Watch the demo video](https://github.com/Eliyas-Wubie/visualize_code/blob/main/media/extention_demo.mp4)**
 
-A VS Code extension that maps functions, class methods, and their connections across a project.
+# Code Execution Visualizer
 
-## Try it locally
+Explore your code as a connected, top-to-bottom map of functions and classes. Discover separate applications in a repository, inspect function details, and follow supported live execution activity.
 
-1. Install Node.js 24 and Python 3.12, then run npm ci in this folder.
-2. Open this repository in VS Code and press F5. The build runs automatically and opens Extension Development Host.
-3. In that new window, open a project folder. Click the Visualize Code Activity Bar icon, then select an application or listed file.
-4. Alternatively, put the cursor on a function name and run Visualize Code: Trace from Cursor from the Command Palette.
-5. Restart the development host after changing extension code; an existing host may retain old modules.
+## Get started
 
-## What the map shows
+1. Install **Code Execution Visualizer** in VS Code and open your project folder.
+2. Click **Visualize Code** in the left Activity Bar.
+3. Select an application or listed file to open its map.
+4. Switch between **Functions** and **OOP** to explore functions or classes. Use the minimap and zoom/pan controls to navigate.
+5. Click a node to inspect its parameters, file, documentation, diagnostics, and available runtime logs.
 
-Functions mode displays functions and ClassName.method labels. OOP mode groups discovered methods by class. Pan/zoom, a navigable minimap, node details, existing documentation, diagnostics, logs, and estimated local Big-O are available. Click ? in the map for detection rules and limitations.
+To start from one function, place the cursor inside it and run **Visualize Code: Trace from Cursor** from the Command Palette. You can also run **Visualize Code: Choose Starting Function**.
 
-React and Next.js apps are identified from package/configuration files; resolved JSX references add renders links. Python symbols and calls depend on installed language support such as Pylance. Discovery is bounded: 500 app markers and 4,000 source files per workspace folder, 300 seeded files per app, and 300 retained graph nodes. Missing provider support is reported.
+## Explore the map
 
-## Live execution
+- **Function maps:** connected functions and class methods, with names such as `ClassName.method`.
+- **Class maps:** switch to OOP mode to explore relationships between classes.
+- **Node details:** parameters, source file, available documentation, warnings, errors, and estimated Big-O complexity when supported.
+- **Navigation:** a clickable minimap, adjustable zoom/pan sensitivity, and separate tabs named after the selected starting point.
+- **Application discovery:** find separate JavaScript/TypeScript, React, Next.js, and Python applications within a repository.
 
-Run live explicitly executes a file or a chosen app target in a trusted workspace. Node.js records V8 call counts and sampled CPU time. Python records frame entries and approximate workspace self elapsed time, plus print/logging/warning/error messages. Python requires Python Debugger; framework packages must already exist in the project's chosen environment.
+Click **?** in the visualizer for details about how symbols and connections are detected.
 
-React/Next.js app maps offer dev-server scripts, browser debugging, and existing launch configurations. A browser debugger can be added while the server runs. Browser-only targets highlight source-mapped paused/stepped frames; they do not provide continuous browser call counts or log capture. Generated framework code may not match source nodes.
+## Watch live execution
 
-Logs stay local and are bounded. One fatal Node.js error can use a temporary record that is read and removed at session end. Do not use real credentials or private data in samples or tests.
+Click **Run live** in a trusted workspace and choose the available file, application, or debug target. Install your application's dependencies and configure its runtime first.
 
-## Samples and checks
+- **Node.js:** function call counts, sampled CPU time, and captured application logs/errors.
+- **Python:** function entries, approximate workspace self elapsed time, and print/logging/warning/error messages. Install the Python and Python Debugger extensions and select the appropriate interpreter.
+- **React and Next.js:** launch a development-server script or an existing debug configuration. Browser debugging highlights paused/stepped frames when source maps resolve; it does not provide continuous browser call counts or browser log capture.
 
-- sample/main.js: cross-file function calls, branching, recursion.
-- sample/oop.js and sample/library/main.js: class-based examples.
-- sample/live.js: timed Node.js workload.
-- sample/logs.js: synthetic warnings and handled errors.
-- sample/python/main.py: Python metrics and logs.
-- sample/python/errors.py: intentional fatal Python error.
+Runtime telemetry stays local and is bounded. Captured logs can contain text emitted by your application.
 
-Use npm run format:check, npm run lint, npm run check, npm test, and npm run build. See [testing and delivery](dev_docs/07_testing_and_delivery.md) for exact commands, CI, and current verification gaps, and [maintenance standards](dev_docs/08_maintenance_and_standards.md) for the source review and known development-tool advisories.
+## Requirements and limitations
+
+VS Code 1.85 or newer is required. Symbol and call detection depend on the installed language providers; Python projects need suitable Python language support such as Pylance. Framework packages must be installed in your project's environment.
+
+The graph represents connections detected by language tools, rather than a guarantee of every possible runtime path. Dynamic calls and generated framework code may not resolve. Complexity labels are conservative estimates, and unsupported cases are shown as unknown.
+
+Large repositories are scanned within limits: 500 application markers and 4,000 source files per workspace folder, 300 seeded files per application, and 300 graph nodes.
+
+## Support and source
+
+[Report an issue](https://github.com/Eliyas-Wubie/visualize_code/issues) or browse the [source and sample projects](https://github.com/Eliyas-Wubie/visualize_code). Licensed under [MIT](https://github.com/Eliyas-Wubie/visualize_code/blob/main/LICENSE).
+
+## Develop locally
+
+Clone the repository, install Node.js 24 and Python 3.12, run `npm ci`, and press **F5** in VS Code to open an Extension Development Host.
+
+Run `npm run format:check`, `npm run lint`, `npm run check`, `npm test`, and `npm run build`. See the repository's [testing and delivery guide](https://github.com/Eliyas-Wubie/visualize_code/blob/main/dev_docs/07_testing_and_delivery.md) for verification details.
