@@ -1,0 +1,104 @@
+{
+  "name": "visualize-code",
+  "displayName": "Project Execution Visualizer",
+  "description": "Explore possible execution paths from a starting function.",
+  "version": "0.0.1",
+  "publisher": "local-prototype",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onView:visualizeCode.apps"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "check": "npm run check:syntax && npm run check:python",
+    "check:syntax": "node scripts/check.js",
+    "check:python": "python -B scripts/check_python.py",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --test",
+    "test:ci": "node scripts/run-ci-tests.js"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "visualizeCode",
+          "title": "Visualize Code",
+          "icon": "media/activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "visualizeCode": [
+        {
+          "id": "visualizeCode.apps",
+          "name": "Applications"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "visualizeCode.refreshApps",
+        "title": "Visualize Code: Refresh Applications",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "visualizeCode.scanApp",
+        "title": "Visualize Code: Scan Application"
+      },
+      {
+        "command": "visualizeCode.scanFile",
+        "title": "Visualize Code: Visualize Listed File"
+      },
+      {
+        "command": "visualizeCode.runLive",
+        "title": "Visualize Code: Run Active File Live"
+      },
+      {
+        "command": "visualizeCode.fromCursor",
+        "title": "Visualize Code: Trace from Cursor"
+      },
+      {
+        "command": "visualizeCode.pickStart",
+        "title": "Visualize Code: Choose Starting Function"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "visualizeCode.refreshApps",
+          "when": "view == visualizeCode.apps",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "visualizeCode.fromCursor",
+          "when": "editorTextFocus",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@xyflow/react": "12.12.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "esbuild": "0.28.2",
+    "eslint": "9.39.5",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "prettier": "3.9.10"
+  }
+}

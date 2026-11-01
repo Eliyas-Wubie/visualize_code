@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Execution Visualizer",
+      "type": "extensionHost",
+      "request": "launch",
+      "preLaunchTask": "Build visualizer",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"]
+    }
+  ]
+}

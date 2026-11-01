@@ -1,0 +1,85 @@
+const { SYMBOL_KINDS: SymbolKind } = require('./symbol-kinds');
+
+/** Seed graph functions from app files; return warnings for missing providers, cancellation, or limits. */
+async function scanApp(vscode, app, graph, token, progress) {
+  const warnings = [];
+  let unavailable = 0;
+  let filesScanned = 0;
+  const ordered = [...new Set([...(app.entries || []), ...app.files])];
+  for (const file of ordered.slice(0, 300)) {
+    if (token.isCancellationRequested) break;
+    const uri = vscode.Uri.joinPath(app.folder.uri, file);
+    progress.report({ message: file });
+    try {
+      await vscode.workspace.openTextDocument(uri);
+      const symbols = await vscode.commands.executeCommand(
+        'vscode.executeDocumentSymbolProvider',
+        uri,
+      );
+      if (!symbols?.length) {
+        unavailable++;
+        continue;
+      }
+      const candidates = [];
+      const visit = (entries) => {
+        for (const symbol of entries || []) {
+          if (
+            [
+              SymbolKind.Method,
+              SymbolKind.Property,
+              SymbolKind.Constructor,
+              SymbolKind.Function,
+              SymbolKind.Variable,
+              SymbolKind.Constant,
+            ].includes(symbol.kind)
+          )
+            candidates.push(symbol);
+          visit(symbol.children);
+        }
+      };
+      visit(symbols);
+      for (const symbol of candidates) {
+        if (token.isCancellationRequested || graph.nodes.size >= graph.limit) break;
+        const range = symbol.range || symbol.location?.range;
+        const selectionRange = symbol.selectionRange || range;
+        const items = await vscode.commands.executeCommand(
+          'vscode.prepareCallHierarchy',
+          uri,
+          selectionRange.start,
+        );
+        if (items?.length) {
+          for (const item of items) graph.add(item);
+        } else if (
+          [SymbolKind.Method, SymbolKind.Constructor, SymbolKind.Function].includes(symbol.kind)
+        ) {
+          const node = graph.add({
+            name: symbol.name,
+            kind: symbol.kind,
+            uri,
+            range,
+            selectionRange,
+          });
+          if (node) {
+            node.loaded = true;
+            node.callSupport = 'No call hierarchy provided; connections unavailable.';
+          }
+        }
+      }
+      filesScanned++;
+    } catch {
+      warnings.push(`Could not analyze ${file}`);
+    }
+    if (graph.nodes.size >= graph.limit) break;
+  }
+  if (app.files.length > 300) warnings.push('Only the first 300 source files were scanned.');
+  if (graph.nodes.size >= graph.limit)
+    warnings.push(`Function limit reached (${graph.limit}); map is partial.`);
+  if (unavailable)
+    warnings.push(
+      `${unavailable} files returned no symbols. Python requires an enabled Python language provider such as Pylance.`,
+    );
+  if (token.isCancellationRequested) warnings.push('Scan cancelled; showing partial results.');
+  return { warnings, filesScanned };
+}
+
+module.exports = { scanApp };

@@ -1,0 +1,6 @@
+dev_docs/local_only/
+node_modules/
+__pycache__/
+media/bundle.js
+media/bundle.css
+reports/

@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+media/bundle.js
+media/bundle.css
+dev_docs/local_only/
+reports/
+__pycache__/
