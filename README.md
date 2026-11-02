@@ -1,4 +1,4 @@
-﻿**[Watch the demo video](https://github.com/Eliyas-Wubie/visualize_code/blob/main/media/extention_demo.mp4)**
+<video src="https://github.com/Eliyas-Wubie/visualize_code/raw/refs/heads/main/media/extention_demo.mp4" controls autoplay muted loop playsinline width="100%" aria-label="Code Execution Visualizer demo"></video>
 
 # Code Execution Visualizer
 

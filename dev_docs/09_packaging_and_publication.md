@@ -37,3 +37,7 @@ The Marketplace icon is media/icon.png (512 by 512 pixels). The manifest and dis
 ## Marketplace presentation update (0.0.3)
 
 The display name is Code Execution Visualizer; the update identity remains lockitech.visualized-code. The README starts with the demo link and prioritizes installed-user setup, capabilities, requirements, and limitations. The video is hosted through the repository and excluded from the VSIX; its GitHub link requires the supplied MP4 to be committed and pushed to main. The local 0.0.3 archive was built and inspected; no Marketplace upload was performed.
+
+## Inline demo (0.0.4)
+
+The README uses an HTML video element with a direct HTTPS MP4 source, playback controls, and muted autoplay requested. Actual autoplay and codec support depend on the viewer. The video remains repository-hosted and excluded from the VSIX. Published-page playback has not been manually verified.

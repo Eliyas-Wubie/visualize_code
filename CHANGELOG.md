@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.4 ? Unreleased
+
+- Embed the demo video player at the top of the extension description.
+
 ## 0.0.3 ? Unreleased
 
 - Rename the extension to Code Execution Visualizer.

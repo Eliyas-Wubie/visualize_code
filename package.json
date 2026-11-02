@@ -2,7 +2,7 @@
   "name": "visualized-code",
   "displayName": "Code Execution Visualizer",
   "description": "Visualize function calls, classes, and live execution across JavaScript, TypeScript, React, Next.js, and Python projects.",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "icon": "media/icon.png",
   "publisher": "lockitech",
   "license": "MIT",
