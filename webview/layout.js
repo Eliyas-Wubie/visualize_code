@@ -1,25 +1,10 @@
-/** Place each function once on a shared canvas; breadth-first rows keep cycles finite. */
-function layout(graph) {
-  const ids = new Map(graph.nodes.map((node, index) => [node.id, `fn-${index}`]));
-  const children = new Map();
-  for (const edge of graph.edges) {
-    if (!children.has(edge.from)) children.set(edge.from, []);
-    children.get(edge.from).push(edge.to);
-  }
-  const depths = new Map([[graph.root, 0]]);
-  const queue = [graph.root];
-  for (let index = 0; index < queue.length; index++) {
-    for (const id of children.get(queue[index]) || []) {
-      if (depths.has(id)) continue;
-      depths.set(id, depths.get(queue[index]) + 1);
-      queue.push(id);
-    }
-  }
-  const rows = new Map();
+const { branchPositions } = require('./branch-positions');
+
+/** Project downward branch lanes and original directed calls into stable React Flow nodes. */
+function layout(graph, dimensions) {
+  const ids = new Map(graph.nodes.map((node) => [node.id, `fn-${encodeURIComponent(node.id)}`]));
+  const positions = branchPositions(graph, dimensions);
   const nodes = graph.nodes.map((node) => {
-    const depth = depths.get(node.id) || 0;
-    const row = rows.get(depth) || 0;
-    rows.set(depth, row + 1);
     const className = node.classInfo?.qualifiedName || node.classInfo?.name;
     const alreadyQualified =
       className &&
@@ -28,7 +13,7 @@ function layout(graph) {
     return {
       id: ids.get(node.id),
       type: 'function',
-      position: { x: row * 360, y: depth * 250 },
+      position: positions.get(node.id),
       data: { ...node, displayName, className, hostId: node.id, root: node.id === graph.root },
     };
   });
@@ -37,7 +22,7 @@ function layout(graph) {
     source: ids.get(edge.from),
     target: ids.get(edge.to),
     type: 'call',
-    markerEnd: { type: 'arrowclosed', color: '#849ac2' },
+    markerEnd: { type: 'arrowclosed', color: '#7c7e8d' },
     data: { lines: edge.lines, kind: edge.kind },
     label: edge.kind === 'render' ? 'renders' : undefined,
     ariaLabel: `${edge.kind === 'render' ? 'Renders' : 'Call'} at lines ${edge.lines.join(', ')}`,

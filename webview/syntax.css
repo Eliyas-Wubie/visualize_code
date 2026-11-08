@@ -1,0 +1,114 @@
+.syntax-editor {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  background: var(--ui-input);
+}
+.authoring-dialog .syntax-editor pre,
+.authoring-dialog .syntax-editor textarea {
+  box-sizing: border-box;
+  padding: 8px;
+  margin: 0;
+  border: 1px solid transparent;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 13px;
+  font-weight: normal;
+  font-variant-ligatures: none;
+  line-height: 1.6;
+  letter-spacing: normal;
+  tab-size: 4;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+.syntax-editor pre {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--ui-text);
+}
+.syntax-editor code {
+  font: inherit;
+}
+.authoring-dialog .syntax-editor textarea {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: min(320px, 45vh);
+  height: clamp(180px, 45vh, 420px);
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--ui-text);
+  border-color: var(--ui-border);
+}
+.authoring-dialog .syntax-editor textarea::placeholder {
+  color: var(--ui-muted);
+  -webkit-text-fill-color: var(--ui-muted);
+  opacity: 1;
+}
+.syntax-editor textarea::selection {
+  background: #3c6b9b88;
+}
+.code-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+}
+.creation-body > .syntax-editor {
+  flex: 0 0 auto;
+}
+.syntax-comment {
+  color: #8ab879;
+}
+.syntax-string {
+  color: #e5a779;
+}
+.syntax-keyword {
+  color: #c89ceb;
+}
+.syntax-number {
+  color: #b5cea8;
+}
+.syntax-function {
+  color: #e0d69b;
+}
+.syntax-type {
+  color: #69d0bb;
+}
+.syntax-punctuation {
+  color: #b2c8e3;
+}
+@media (forced-colors: active) {
+  .syntax-editor pre {
+    display: none;
+  }
+  .authoring-dialog .syntax-editor textarea {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    caret-color: CanvasText;
+  }
+}
+
+.vscode-light .syntax-comment {
+  color: #537b37;
+}
+.vscode-light .syntax-string {
+  color: #a64d13;
+}
+.vscode-light .syntax-keyword {
+  color: #7542b0;
+}
+.vscode-light .syntax-number {
+  color: #3e6b22;
+}
+.vscode-light .syntax-function {
+  color: #81560b;
+}
+.vscode-light .syntax-type {
+  color: #19715d;
+}
+.vscode-light .syntax-punctuation {
+  color: #575773;
+}

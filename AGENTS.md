@@ -4,7 +4,7 @@ Last verified: 2026-11-01. These project facts supplement the user's global inst
 
 ## Product and layout
 
-Code Execution Visualizer is a desktop VS Code extension. src/ owns VS Code integration, discovery, graph analysis, diagnostics, and launch selection. webview/ owns the React Flow interface. runtime/ contains opt-in Node.js and Python profiling. sample/ contains synthetic demonstrations. test/ contains Node test-runner suites and real local runtime integration tests. media/bundle.js and media/bundle.css are generated and ignored.
+Code Execution Visualizer is a desktop VS Code extension. src/ owns VS Code integration, discovery, graph analysis, diagnostics, launch selection, and validated source authoring. webview/ owns the React Flow interface. runtime/ contains opt-in Node.js and Python profiling. sample/ contains synthetic demonstrations. test/ contains Node test-runner suites and real local runtime integration tests. media/bundle.js and media/bundle.css are generated and ignored.
 
 ## Setup and commands
 
@@ -17,6 +17,7 @@ Use Node.js 24, npm with package-lock.json, and Python 3.12 for development. Pyt
 - Format validation: npm run format:check
 - Format changes: npm run format
 - Full tests: npm test
+- Browser UI regression: npm run test:webview (build first; uses isolated Chromium/Edge, optionally configured with VISUALIZER_BROWSER_PATH)
 - Focused test example: node --test test/graph.test.js
 - CI test reports: npm run test:ci
 - Package preview: npm run check:package (build first); VSCE prepublish: npm run vscode:prepublish
@@ -30,6 +31,7 @@ ESLint and Prettier are installed as explicitly approved development-only depend
 - Keep presentation in webview/, provider adapters in src/, and injected runtime code in runtime/. Use existing dependencies before proposing production additions.
 - Document exported functions, externally invoked handlers, Python public methods, failure behavior, and non-obvious constructs. Comment every regex directly above its use.
 - Review changed hand-written files over 100 lines for cohesion; split responsibilities, not arbitrary line counts. Formatting alone is not a reason to fragment a cohesive module.
+- Source authoring uses host-owned hierarchy IDs, versioned source snapshots, WorkspaceEdit and provider Rename Symbol. Keep Architecture read-only, reject untrusted/nonlocal/symlink-escaped targets, and never substitute global textual rename. Text edits remain undoable and automatically save only affected documents; folder creation is a filesystem action. Failed saves must report applied-but-unsaved state.
 - Never execute project code during discovery. Live execution requires an explicit user action and a trusted workspace. Keep telemetry bounded and local; logs can contain application-provided sensitive text.
 - Keep source/parameter/documentation failures explicit. Do not infer unresolved call edges, unknown complexity, or unsupported browser metrics.
 - Add observable-behavior regression tests for fixes. Tests use synthetic data and local subprocesses only. No external production services are permitted in normal tests.

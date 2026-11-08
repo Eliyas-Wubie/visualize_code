@@ -33,3 +33,42 @@ test('debugger tracker reads stopped stacks, clears on continue, and reports fai
   await tracker.onDidSendMessage({ type: 'event', event: 'stopped', body: { threadId: 1 } });
   assert.equal(events[2].status, 'Stack unavailable');
 });
+
+test('owned step stops preserve focus synchronously, while ordinary debug stops retain their original behavior', async () => {
+  let factory;
+  let release;
+  const vscode = {
+    debug: {
+      registerDebugAdapterTrackerFactory: (_, value) => {
+        factory = value;
+        return {};
+      },
+    },
+    Uri: { file: (path) => ({ toString: () => `file://${path}` }) },
+  };
+  observeDebugger(
+    vscode,
+    () => {},
+    (session) => session.step === true,
+  );
+  const session = {
+    step: true,
+    customRequest: () =>
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+  };
+  const tracker = factory.createDebugAdapterTracker(session);
+  const stop = { type: 'event', event: 'stopped', body: { threadId: 1, reason: 'breakpoint' } };
+  const reading = tracker.onDidSendMessage(stop);
+  assert.equal(stop.body.preserveFocusHint, true);
+  assert.equal(stop.body.reason, 'breakpoint');
+  release({ stackFrames: [] });
+  await reading;
+  session.step = false;
+  const ordinary = { type: 'event', event: 'stopped', body: { threadId: 1 } };
+  const second = tracker.onDidSendMessage(ordinary);
+  assert.equal(ordinary.body.preserveFocusHint, undefined);
+  release({ stackFrames: [] });
+  await second;
+});

@@ -1,0 +1,110 @@
+.step-controls {
+  flex: 0 0 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 18px;
+  background: var(--ui-panel);
+  border-top: 1px solid var(--ui-border);
+}
+.step-buttons {
+  display: flex;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.step-status {
+  flex: 1;
+  min-width: 0;
+  max-height: 56px;
+  overflow: auto;
+  font-size: 11px;
+}
+.step-status strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+}
+.step-status strong::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ui-muted);
+  margin-right: 7px;
+}
+[data-state='paused'] .step-status strong::before {
+  background: var(--ui-warning);
+}
+[data-state='running'] .step-status strong::before {
+  background: var(--ui-accent);
+}
+[data-state='finished'] .step-status strong::before {
+  background: var(--ui-success);
+}
+.step-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  color: var(--ui-muted);
+  font-size: 10px;
+  margin-top: 7px;
+}
+.step-status [role='alert'] {
+  display: block;
+  margin-top: 5px;
+  color: var(--ui-warning);
+}
+.step-legend {
+  display: flex;
+  gap: 12px;
+  color: var(--ui-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.step-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--ui-warning);
+}
+.step-legend span:nth-child(2)::before {
+  background: var(--ui-accent);
+}
+.step-legend span:nth-child(3)::before {
+  background: var(--ui-success);
+}
+.runtime-status {
+  flex: 0 0 20ch;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.function-card.step-visited {
+  border-color: var(--ui-success);
+}
+.function-card.step-stack {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 1px var(--ui-accent);
+}
+.function-card.step-current {
+  border-color: var(--ui-warning);
+  box-shadow: 0 0 0 2px var(--ui-warning);
+}
+.function-card.step-current.severity-error {
+  border-color: var(--ui-error);
+}
+@media (max-width: 900px) {
+  .step-legend {
+    display: none;
+  }
+  .step-controls {
+    padding-inline: 12px;
+    gap: 12px;
+  }
+}

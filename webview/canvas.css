@@ -1,0 +1,133 @@
+.react-flow {
+  --xy-background-color: var(--ui-bg);
+  --xy-minimap-background-color: var(--ui-panel);
+}
+.react-flow__minimap {
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px #0002;
+}
+.react-flow__minimap-mask {
+  fill: color-mix(in srgb, var(--ui-bg), transparent 25%);
+}
+.react-flow__controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 3px 12px #0003;
+}
+.react-flow__controls button {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  background: transparent;
+  color: var(--ui-text);
+  border: 0;
+  border-radius: 4px;
+  fill: none;
+}
+.react-flow__controls button:hover {
+  background: var(--ui-raised);
+}
+.react-flow__controls button svg {
+  width: 15px;
+  height: 15px;
+  max-width: none;
+  max-height: none;
+}
+.zoom-value {
+  min-width: 42px;
+  padding: 0 5px;
+  text-align: center;
+  color: var(--ui-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.navigation-settings {
+  position: relative;
+}
+.navigation-settings > summary {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  list-style: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.navigation-settings > summary:hover {
+  background: var(--ui-raised);
+}
+.navigation-settings > summary::-webkit-details-marker {
+  display: none;
+}
+.navigation-popover {
+  position: absolute;
+  left: 0;
+  bottom: 42px;
+  z-index: 50;
+  width: 245px;
+  padding: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: 9px;
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
+}
+.navigation-popover p {
+  margin-bottom: 0;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--ui-muted);
+}
+.sensitivity {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+.sensitivity label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  color: var(--ui-muted);
+  font-size: 11px;
+}
+.sensitivity input {
+  width: 115px;
+  accent-color: var(--ui-accent);
+}
+.react-flow__edge-text {
+  fill: var(--ui-text);
+}
+.react-flow__edge-textbg {
+  fill: var(--ui-panel);
+}
+@media (max-width: 600px) {
+  .react-flow__minimap {
+    width: 120px !important;
+    height: 80px !important;
+  }
+  .react-flow__controls {
+    margin: 8px;
+  }
+  .navigation-popover {
+    left: auto;
+    right: 0;
+    width: 210px;
+  }
+}
+
+@media (max-width: 420px) {
+  .react-flow__minimap {
+    width: 96px !important;
+    height: 64px !important;
+    margin: 8px;
+  }
+}

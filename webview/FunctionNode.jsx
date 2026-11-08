@@ -2,16 +2,21 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { LiveBadge } from './LiveBadge';
 import { ComplexityBadge } from './ComplexityBadge';
+import { NodeHeading } from './NodeHeading';
 
 /** Render one function with call handles, source navigation, and discovery status. */
 export function FunctionNode({ data }) {
   return (
     <article
-      className={`function-card ${data.root ? 'entry' : ''} ${data.active ? 'live-active' : ''} ${data.live?.calls ? 'live-observed' : ''} ${data.recent ? 'live-recent' : ''} severity-${data.severity || 'none'}`}
+      className={`function-card ${data.root ? 'entry' : ''} ${data.active ? 'live-active' : ''} ${data.current ? 'step-current' : data.active ? 'step-stack' : data.visited ? 'step-visited' : ''} ${data.live?.calls ? 'live-observed' : ''} ${data.recent ? 'live-recent' : ''} severity-${data.severity || 'none'}`}
     >
       <Handle type="target" position={Position.Top} isConnectable={false} />
-      <div className="node-kind">{data.root ? 'STARTING FUNCTION' : 'FUNCTION'}</div>
-      <button className="function-name nodrag" onClick={() => data.inspect(data.hostId)}>
+      <NodeHeading data={data} kind="function" label={data.className ? 'Method' : 'Function'} />
+      <button
+        className="function-name nodrag"
+        title={data.displayName}
+        onClick={() => data.inspect(data.hostId)}
+      >
         {data.displayName}
       </button>
       {data.severity && (

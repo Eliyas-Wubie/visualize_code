@@ -1,0 +1,17 @@
+.react-flow__node.hover-connected .function-card {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px #c4a0ff18;
+}
+
+.react-flow__node.hover-origin .function-card {
+  outline-color: #7eeaff;
+  box-shadow: 0 0 0 4px #7eeaff18;
+}
+
+.react-flow__edge-interaction {
+  cursor: pointer;
+}
+body.vscode-light .react-flow__node.hover-origin .function-card {
+  outline-color: #127b8d;
+}

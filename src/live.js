@@ -4,6 +4,10 @@ const { ingest } = require('./runtime-data');
 const { observeDebugger } = require('./debug-live');
 const { chooseLaunch } = require('./launch-targets');
 const { profiledConfiguration } = require('./launch-profile');
+const { createStepRun } = require('./step-run');
+const { installStepBreakpoints } = require('./step-breakpoints');
+const { keepStepFocus } = require('./step-focus');
+const { StepSetupError } = require('./step-error');
 
 /** Launch supported app runtimes and observe debugger frames without silently claiming unsupported profiling. */
 function createLive(vscode, context) {
@@ -14,43 +18,88 @@ function createLive(vscode, context) {
   let rootSession;
   let observedId;
   let launching = false;
-  const notify = () => events.emit('change');
-  const observer = observeDebugger(vscode, (session, status, frames) => {
-    let related = session;
-    while (related && related.id !== sessionId) related = related.parentSession;
-    if (sessionId && !related) return;
-    if (status === 'Finished' && sessionId && session.id !== sessionId) return;
-    if (!sessionId && observedId !== session.id) {
-      state.records.clear();
-      state.logs = [];
-      observedId = session.id;
+  let breakpoints;
+  let focus;
+  let revealStep;
+  let focusRestore = Promise.resolve();
+  const cleanupStep = () => {
+    breakpoints?.dispose();
+    breakpoints = undefined;
+    revealStep = undefined;
+    if (focus) {
+      const previous = focus;
+      focus = undefined;
+      focusRestore = previous.dispose().catch(() => {
+        vscode.window.showErrorMessage(
+          'Could not restore debug.focusEditorOnBreak. Restore it in workspace settings.',
+        );
+      });
     }
-    state.status =
-      status === 'Running' && state.profileMode === 'debugger'
-        ? 'Running (debugger highlights on pause)'
-        : status;
-    state.frames = frames;
-    notify();
-  });
-  const started = vscode.debug.onDidStartDebugSession((session) => {
+  };
+  const notify = () => events.emit('change');
+  const stepping = createStepRun(state, notify);
+  const adoptSession = (session) => {
     if (session.configuration?.visualizeLive && !sessionId) {
       sessionId = session.id;
       observedId = session.id;
       rootSession = session;
     }
-  });
+  };
+  const observer = observeDebugger(
+    vscode,
+    async (session, status, frames, detail) => {
+      adoptSession(session);
+      let related = session;
+      while (related && related.id !== sessionId) related = related.parentSession;
+      if (sessionId && !related) return;
+      if (status === 'Finished' && sessionId && session.id !== sessionId) return;
+      if (!sessionId && observedId !== session.id) {
+        state.records.clear();
+        state.logs = [];
+        observedId = session.id;
+      }
+      state.status =
+        status === 'Running' && state.step
+          ? 'Stepping to next function…'
+          : status === 'Running' && state.profileMode === 'debugger'
+            ? 'Running (debugger highlights on pause)'
+            : status;
+      state.frames = frames;
+      if (state.step && related) {
+        if (status === 'Finished') {
+          stepping.finish();
+          cleanupStep();
+        } else if (status === 'Running') state.step.canNext = false;
+        else if (status === 'Paused' && (await stepping.stopped(session, frames, detail))) return;
+      }
+      notify();
+      if (status === 'Paused' && state.step?.canNext) revealStep?.();
+    },
+    (session) => {
+      if (!state.step || state.step.finished) return false;
+      for (let owner = session; owner; owner = owner.parentSession)
+        if (owner.configuration?.visualizeStep) return true;
+      return false;
+    },
+  );
+  const started = vscode.debug.onDidStartDebugSession(adoptSession);
   const ended = vscode.debug.onDidTerminateDebugSession((session) => {
     if (session.id !== sessionId) return;
     pipe?.flushCrash();
-    state.status = 'Finished';
+    state.status =
+      state.step && !state.step.count
+        ? 'Finished without hitting automatic breakpoints. Check the launch target and source maps.'
+        : 'Finished';
     state.frames = [];
+    stepping.finish();
+    cleanupStep();
     notify();
     pipe?.dispose();
     pipe = undefined;
     sessionId = undefined;
     rootSession = undefined;
   });
-  const start = async (uri, app) => {
+  const start = async (uri, app, stepGraph, reveal) => {
     const reject = (message) => {
       state.status = message;
       notify();
@@ -68,11 +117,20 @@ function createLive(vscode, context) {
       reject('Open a local source file or application map first.');
       return;
     }
+    if (stepGraph && !stepGraph.items.size) {
+      reject('Discover functions in this map before starting Step run.');
+      return;
+    }
     launching = true;
+    let stage = 'selecting the launch target';
     try {
       const target = await chooseLaunch(vscode, uri, app);
       if (!target) return;
       if (pipe || sessionId) {
+        if (stepGraph || state.step) {
+          reject('Stop the current live session before starting another.');
+          return;
+        }
         if (target.mode === 'debugger' && target.configuration.type === 'pwa-chrome') {
           try {
             const ok = await vscode.debug.startDebugging(
@@ -92,32 +150,65 @@ function createLive(vscode, context) {
       state.logError = undefined;
       state.timing = target.mode === 'python' ? 'elapsed self' : 'sampled CPU';
       state.countLabel = target.mode === 'python' ? 'entries' : 'calls';
-      state.profileMode = target.mode;
+      state.profileMode = stepGraph ? 'debugger' : target.mode;
       state.frames = [];
       state.status = 'Starting live run';
+      stepping.reset();
+      await focusRestore;
+      if (stepGraph) {
+        stage = 'installing automatic function breakpoints';
+        breakpoints = await installStepBreakpoints(vscode, stepGraph);
+        stage = 'keeping focus in the visualizer';
+        focus = await keepStepFocus(vscode, target.folder?.uri);
+        stepping.prepare(stepGraph, breakpoints.items);
+        state.step.breakpoints = breakpoints.count;
+        state.step.warning = breakpoints.skipped.length
+          ? `Automatic breakpoints unavailable for: ${breakpoints.skipped.slice(0, 8).join(', ')}${breakpoints.skipped.length > 8 ? '…' : ''}`
+          : undefined;
+        revealStep = reveal;
+      }
       notify();
-      if (target.mode !== 'debugger')
+      if (target.mode !== 'debugger' && !stepGraph)
         pipe = await openRuntimePipe((message) => {
           ingest(state, message);
           notify();
         });
+      stage = `starting the ${target.configuration.type} debugger`;
       const ok = await vscode.debug.startDebugging(
         target.folder,
-        profiledConfiguration(vscode, context, target, pipe),
+        {
+          ...profiledConfiguration(vscode, context, target, pipe),
+          ...(stepGraph
+            ? {
+                stopOnEntry: false,
+                noDebug: false,
+                internalConsoleOptions: 'neverOpen',
+                visualizeStep: true,
+              }
+            : {}),
+        },
+        stepGraph ? { suppressDebugView: true, suppressDebugToolbar: true } : undefined,
       );
       if (!ok) throw new Error('launch rejected');
       if (state.status === 'Starting live run')
         state.status =
           target.mode === 'debugger' ? 'Running (debugger highlights on pause)' : 'Running';
       notify();
-    } catch {
+    } catch (error) {
+      stepping.reset();
+      cleanupStep();
       pipe?.dispose();
       pipe = undefined;
       sessionId = undefined;
-      state.status = 'Could not start live tracing';
+      state.status =
+        error instanceof StepSetupError
+          ? error.message
+          : `Could not start live run while ${stage}.`;
       notify();
       vscode.window.showErrorMessage(
-        'Could not start live run. Check the app launch configuration, runtime, and debugger extension (Python requires Python Debugger).',
+        error instanceof StepSetupError
+          ? state.status
+          : `${state.status} Check the selected interpreter/runtime and debugger extension.`,
       );
     } finally {
       launching = false;
@@ -126,12 +217,18 @@ function createLive(vscode, context) {
   return {
     state,
     start,
+    next: stepping.next,
+    stop: async () => {
+      if (rootSession) await vscode.debug.stopDebugging(rootSession);
+    },
     subscribe: (listener) => {
       events.on('change', listener);
       return { dispose: () => events.off('change', listener) };
     },
     dispose: () => {
       observer.dispose();
+      cleanupStep();
+      stepping.reset();
       started.dispose();
       ended.dispose();
       pipe?.dispose();

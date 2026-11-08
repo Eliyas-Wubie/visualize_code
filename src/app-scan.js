@@ -1,7 +1,8 @@
 const { SYMBOL_KINDS: SymbolKind } = require('./symbol-kinds');
+const { readySymbols } = require('./provider-ready');
 
 /** Seed graph functions from app files; return warnings for missing providers, cancellation, or limits. */
-async function scanApp(vscode, app, graph, token, progress) {
+async function scanApp(vscode, app, graph, token, progress, waitForProvider = false) {
   const warnings = [];
   let unavailable = 0;
   let filesScanned = 0;
@@ -9,13 +10,15 @@ async function scanApp(vscode, app, graph, token, progress) {
   for (const file of ordered.slice(0, 300)) {
     if (token.isCancellationRequested) break;
     const uri = vscode.Uri.joinPath(app.folder.uri, file);
+    graph.sourceUris ||= [];
+    if (!graph.sourceUris.some((source) => source.toString() === uri.toString()))
+      graph.sourceUris.push(uri);
     progress.report({ message: file });
     try {
-      await vscode.workspace.openTextDocument(uri);
-      const symbols = await vscode.commands.executeCommand(
-        'vscode.executeDocumentSymbolProvider',
-        uri,
-      );
+      const document = await vscode.workspace.openTextDocument(uri);
+      const symbols = waitForProvider
+        ? await readySymbols(vscode, uri, document, token, progress)
+        : await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', uri);
       if (!symbols?.length) {
         unavailable++;
         continue;
@@ -66,7 +69,8 @@ async function scanApp(vscode, app, graph, token, progress) {
         }
       }
       filesScanned++;
-    } catch {
+    } catch (error) {
+      if (waitForProvider) throw error;
       warnings.push(`Could not analyze ${file}`);
     }
     if (graph.nodes.size >= graph.limit) break;

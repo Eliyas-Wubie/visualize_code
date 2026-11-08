@@ -6,9 +6,11 @@ const { runInNewContext } = require('node:vm');
 function setup(trusted = true) {
   const launches = [];
   const notices = [];
+  const steps = [];
   let began;
   let ended;
   let closed = false;
+  let observe;
   const vscode = {
     workspace: { isTrusted: trusted, getWorkspaceFolder: () => ({ uri: { fsPath: '/project' } }) },
     window: {
@@ -26,6 +28,7 @@ function setup(trusted = true) {
         return { dispose() {} };
       },
       startDebugging: async (_, configuration) => {
+        steps.push('launch');
         launches.push(configuration);
         began({ id: 'test', configuration });
         return true;
@@ -35,7 +38,37 @@ function setup(trusted = true) {
   const sandbox = {
     module: { exports: {} },
     require: (name) => {
-      if (name === './debug-live') return { observeDebugger: () => ({ dispose() {} }) };
+      if (name === './debug-live')
+        return {
+          observeDebugger: (_, callback) => {
+            observe = callback;
+            return { dispose() {} };
+          },
+        };
+      if (name === './step-breakpoints')
+        return {
+          installStepBreakpoints: async () => {
+            steps.push('breakpoints');
+            return {
+              count: 1,
+              skipped: [],
+              dispose() {
+                steps.push('remove');
+              },
+            };
+          },
+        };
+      if (name === './step-focus')
+        return {
+          keepStepFocus: async () => {
+            steps.push('focus');
+            return {
+              dispose: async () => {
+                steps.push('restore');
+              },
+            };
+          },
+        };
       if (name === './runtime-pipe')
         return {
           openRuntimePipe: async () => ({
@@ -56,9 +89,11 @@ function setup(trusted = true) {
     live,
     launches,
     notices,
+    steps,
     vscode,
     end: () => ended({ id: 'test' }),
     closed: () => closed,
+    observe: (...args) => observe(...args),
   };
 }
 
@@ -75,6 +110,47 @@ test('live execution is opt-in, uses a local preload, and cleans up at session e
   host.end();
   assert.equal(host.closed(), true);
   assert.equal(host.live.state.status, 'Finished');
+  host.live.dispose();
+});
+
+test('step launch installs breakpoints before execution without profiling and only Next resumes its paused session', async () => {
+  const host = setup();
+  const uri = {
+    scheme: 'file',
+    fsPath: '/project/main.js',
+    toString: () => 'file:///project/main.js',
+  };
+  const graph = {
+    items: new Map([
+      [
+        'run',
+        {
+          uri,
+          range: {
+            start: { line: 0, character: 0 },
+            end: { line: 5, character: 100 },
+          },
+        },
+      ],
+    ]),
+  };
+  await host.live.start(uri, undefined, graph);
+  assert.deepEqual(host.steps, ['breakpoints', 'focus', 'launch']);
+  assert.equal(host.launches[0].stopOnEntry, false);
+  assert.equal(host.launches[0].env, undefined);
+  const requests = [];
+  const session = { id: 'test', customRequest: async (...args) => requests.push(args) };
+  const frames = [{ uri: uri.toString(), position: { line: 1, character: 0 } }];
+  await host.observe({ id: 'unrelated' }, 'Paused', frames, { threadId: 1 });
+  assert.equal(host.live.state.step.canNext, false);
+  await host.observe(session, 'Paused', frames, { threadId: 3 });
+  assert.equal(host.live.state.step.canNext, true);
+  await host.live.next();
+  assert.deepEqual(requests[0], ['continue', { threadId: 3, singleThread: false }]);
+  host.end();
+  assert.equal(host.live.state.step.finished, true);
+  assert.deepEqual(host.steps, ['breakpoints', 'focus', 'launch', 'remove', 'restore']);
+  assert.equal(host.live.state.step.canNext, false);
   host.live.dispose();
 });
 
@@ -99,6 +175,49 @@ test('a browser debugger can be added to an active development server without di
   assert.equal(host.launches[1].type, 'pwa-chrome');
   assert.equal(host.live.state.records.get('synthetic').calls, 2);
   assert.equal(host.closed(), false);
+  host.live.dispose();
+});
+
+test('an initial breakpoint before VS Code announces session start still enables Next', async () => {
+  const host = setup();
+  const uri = {
+    scheme: 'file',
+    fsPath: '/project/main.py',
+    toString: () => 'file:///project/main.py',
+  };
+  const graph = {
+    items: new Map([
+      [
+        'main',
+        { uri, range: { start: { line: 0, character: 0 }, end: { line: 5, character: 100 } } },
+      ],
+    ]),
+  };
+  const start = host.vscode.debug.startDebugging;
+  host.vscode.debug.startDebugging = async (...args) => {
+    await host.observe(
+      { id: 'test', configuration: args[1] },
+      'Paused',
+      [{ uri: uri.toString(), position: { line: 1, character: 0 } }],
+      { threadId: 2, reason: 'breakpoint' },
+    );
+    return start(...args);
+  };
+  await host.live.start(uri, undefined, graph);
+  assert.equal(host.live.state.step.canNext, true);
+  assert.equal(host.live.state.step.count, 1);
+  host.live.dispose();
+});
+
+test('a rejected debugger launch removes breakpoints, restores focus and identifies its failing stage', async () => {
+  const host = setup();
+  host.vscode.debug.startDebugging = async () => false;
+  await host.live.start({ scheme: 'file', fsPath: '/project/main.py' }, undefined, {
+    items: new Map([['main', {}]]),
+  });
+  assert.deepEqual(host.steps, ['breakpoints', 'focus', 'remove', 'restore']);
+  assert(host.live.state.status.includes('starting the debugpy debugger'));
+  assert.equal(host.live.state.step, undefined);
   host.live.dispose();
 });
 

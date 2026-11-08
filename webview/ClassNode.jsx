@@ -1,15 +1,16 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { LiveBadge } from './LiveBadge';
+import { NodeHeading } from './NodeHeading';
 
 /** Render a class and its discovered methods; names navigate to their source declarations. */
 export function ClassNode({ data }) {
   return (
     <article
-      className={`function-card class-card ${data.root ? 'entry' : ''} ${data.active ? 'live-active' : ''} ${data.live?.calls ? 'live-observed' : ''} ${data.recent ? 'live-recent' : ''} severity-${data.severity || 'none'}`}
+      className={`function-card class-card ${data.root ? 'entry' : ''} ${data.active ? 'live-active' : ''} ${data.current ? 'step-current' : data.active ? 'step-stack' : data.visited ? 'step-visited' : ''} ${data.live?.calls ? 'live-observed' : ''} ${data.recent ? 'live-recent' : ''} severity-${data.severity || 'none'}`}
     >
       <Handle type="target" position={Position.Top} isConnectable={false} />
-      <div className="node-kind">CLASS</div>
+      <NodeHeading data={data} kind="class" label="Class" />
       <button
         className="function-name nodrag"
         title={data.qualifiedName}

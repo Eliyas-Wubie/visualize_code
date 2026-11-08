@@ -1,0 +1,37 @@
+.architecture-card {
+  width: 310px;
+  min-height: 220px;
+  border-top: 3px solid #ad9ce8;
+}
+
+.architecture-files {
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--ui-muted);
+}
+
+.architecture-files li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin: 5px 0;
+}
+
+.architecture-summary {
+  padding: 10px 24px;
+  background: #ad9ce810;
+  border-block: 1px solid #ad9ce833;
+  font-size: 12px;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.architecture-summary p {
+  margin: 6px 0;
+  color: var(--ui-muted);
+}
+
+.architecture-summary summary {
+  cursor: pointer;
+  color: var(--ui-accent);
+}

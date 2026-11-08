@@ -1,0 +1,108 @@
+.node-details {
+  position: absolute;
+  z-index: 20;
+  inset: 12px 12px 12px auto;
+  width: min(390px, calc(100% - 24px));
+  padding: 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  color: var(--ui-text);
+  background: var(--ui-panel);
+  box-shadow: var(--ui-shadow);
+  font-size: 12px;
+}
+.details-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.details-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.node-details h3 {
+  margin-top: 24px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--ui-muted);
+}
+.details-path,
+.node-details pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.details-path {
+  padding: 8px 10px;
+  color: var(--ui-muted);
+  background: var(--ui-input);
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+}
+.details-hint {
+  color: var(--ui-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.detail-entry {
+  border-left: 2px solid var(--ui-border);
+  background: var(--ui-input);
+  padding: 9px;
+  margin: 8px 0;
+  border-radius: 0 5px 5px 0;
+}
+.detail-entry.error {
+  border-color: var(--ui-error);
+}
+.detail-entry.warning {
+  border-color: var(--ui-warning);
+}
+.detection-help {
+  position: relative;
+}
+.detection-help summary {
+  display: grid;
+  place-items: center;
+  list-style: none;
+  height: 28px;
+  width: 28px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--ui-muted);
+  font-weight: 600;
+}
+.detection-help summary::-webkit-details-marker {
+  display: none;
+}
+.help-content {
+  position: absolute;
+  right: 0;
+  top: 38px;
+  z-index: 100;
+  width: min(520px, calc(100vw - 32px));
+  max-height: 70vh;
+  overflow: auto;
+  padding: 20px;
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  box-shadow: var(--ui-shadow);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.help-content h2 {
+  font-size: 16px;
+  margin-top: 0;
+}
+.help-content strong {
+  color: var(--ui-accent);
+}
+.help-dismiss {
+  color: var(--ui-muted);
+  margin-bottom: 0;
+}

@@ -34,7 +34,9 @@ export function DetectionHelp() {
         </p>
         <p>
           <strong>Starting point:</strong> Your selected function is resolved using VS Code’s call
-          hierarchy. The function picker uses the active file’s document symbols.
+          hierarchy. The function picker uses the active file’s document symbols. App/file maps
+          prefer a top-level main function when one is available; this is a convention, not proof of
+          the runtime entry. Cursor traces retain your selected function.
         </p>
         <p>
           <strong>Functions and calls:</strong> The extension asks your installed language extension

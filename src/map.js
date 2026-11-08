@@ -3,11 +3,15 @@ const { render } = require('./panel');
 const { createGraphEnricher } = require('./enrich-graph');
 const { liveSnapshot } = require('./live-match');
 const { diagnosticSnapshot } = require('./diagnostics');
+const { createEditing } = require('./editing');
+const { refreshMap } = require('./refresh-map');
+const { mapMessages } = require('./map-messages');
+const { observeMapSources } = require('./map-sources');
+const { sendMapState } = require('./map-state');
 
-/** Open an interactive map for a selected flow or a pre-scanned application. */
+/** Open and dispose an editable graph panel; bridge, source invalidation and refactoring retain separate responsibilities. */
 function showMap(context, live, graph, root, options = {}) {
-  const first = graph.nodes.values().next().value;
-  const { enrich, classes } = createGraphEnricher(vscode, graph);
+  let { enrich, classes } = createGraphEnricher(vscode, graph);
   const title = options.app?.selectedFile || options.app?.name || root.name;
   const panel = vscode.window.createWebviewPanel('executionFlow', title, vscode.ViewColumn.Beside, {
     enableScripts: true,
@@ -15,80 +19,125 @@ function showMap(context, live, graph, root, options = {}) {
   });
   let disposed = false;
   let busy = false;
-  const send = (error) => {
-    if (!disposed)
-      panel.webview.postMessage({
-        type: 'graph',
-        root: first.id,
-        ...graph.snapshot(),
-        capabilities: { live: true },
-        app: options.app && {
-          name: options.app.name,
-          framework: options.app.framework,
-          selectedFile: options.app.selectedFile,
-        },
-        warnings: options.warnings || [],
-        error,
-      });
-    if (!disposed) panel.webview.postMessage(liveSnapshot(graph, live.state));
-    if (!disposed)
-      panel.webview.postMessage(
-        diagnosticSnapshot(graph, (uri) => vscode.languages.getDiagnostics(uri)),
-      );
+  let loadToken;
+  const state = () => ({ graph, classes, root, options, busy });
+  const post = (message) => {
+    if (!disposed) panel.webview.postMessage(message);
   };
+  const send = (error) => {
+    if (!disposed) sendMapState(vscode, post, live, state(), editing, error);
+  };
+  const refresh = async (extras = [], reloadCatalog = true) => {
+    if (disposed) return;
+    busy = true;
+    try {
+      if (reloadCatalog && vscode.workspace.isTrusted) await editing.catalog();
+      const next = await refreshMap(vscode, graph, root, options, extras);
+      if (disposed) return;
+      graph = next.graph;
+      root = next.root;
+      options.canvasScope = next.scope;
+      options.warnings = next.warnings;
+      ({ enrich, classes } = createGraphEnricher(vscode, graph));
+      await enrich();
+      if (!options.app) panel.title = graph.nodes.size ? root.name : 'Source map';
+      send();
+    } catch {
+      send(
+        'Source changed, but the map is stale. Use Refresh map after language support is ready.',
+      );
+      throw new Error('Map refresh failed.');
+    } finally {
+      busy = false;
+    }
+  };
+  const editing = createEditing(vscode, state, refresh, post);
+  const sourceListener = observeMapSources(vscode, state, editing, refresh);
   const liveListener = live.subscribe(() => {
-    if (!disposed) panel.webview.postMessage(liveSnapshot(graph, live.state));
+    if (!disposed) {
+      post(liveSnapshot(graph, live.state));
+    }
   });
   const diagnosticsListener = vscode.languages.onDidChangeDiagnostics(() => {
     if (!disposed)
-      panel.webview.postMessage(
-        diagnosticSnapshot(graph, (uri) => vscode.languages.getDiagnostics(uri)),
-      );
+      post(diagnosticSnapshot(graph, (uri) => vscode.languages.getDiagnostics(uri), classes));
   });
-  const listener = panel.webview.onDidReceiveMessage(async (message) => {
-    if (!message || typeof message !== 'object') return;
-    if (message.type === 'startLive') {
-      await live.start(root.uri, options.app);
-      return;
+  const initialize = async () => {
+    if (busy) return;
+    busy = true;
+    const token = { isCancellationRequested: false };
+    loadToken = token;
+    const progress = {
+      report: ({ message }) => {
+        if (!token.isCancellationRequested) post({ type: 'loading', message });
+      },
+    };
+    progress.report({ message: 'Preparing code map…' });
+    try {
+      if (options.load) {
+        const next = await options.load(token, progress);
+        if (disposed || token.isCancellationRequested) return;
+        graph = next.graph;
+        root = next.root;
+        options.warnings = next.warnings;
+        ({ enrich, classes } = createGraphEnricher(vscode, graph));
+      }
+      progress.report({ message: 'Loading function details…' });
+      if (vscode.workspace.isTrusted) {
+        try {
+          await editing.catalog();
+        } catch {
+          options.warnings = [
+            ...(options.warnings || []),
+            'Authoring hierarchy unavailable. Check workspace permissions.',
+          ];
+        }
+      }
+      await enrich();
+      if (disposed || token.isCancellationRequested) return;
+      send();
+      post({ type: 'loading', status: 'ready' });
+    } catch {
+      if (!token.isCancellationRequested)
+        post({
+          type: 'loading',
+          status: 'error',
+          message:
+            'Could not load the map yet. Wait for JavaScript/TypeScript or Python/Pylance language support, then retry.',
+        });
+    } finally {
+      if (loadToken === token) busy = false;
     }
-    if (message.type === 'ready') {
+  };
+  const expand = async (id) => {
+    busy = true;
+    try {
+      await graph.expand(id);
       await enrich();
       send();
-      return;
-    }
-    if (
-      typeof message.id !== 'string' ||
-      (!graph.items.has(message.id) && !classes.locations.has(message.id))
-    )
-      return;
-    try {
-      if (message.type === 'open') {
-        const item = graph.items.get(message.id) || classes.locations.get(message.id);
-        await vscode.window.showTextDocument(item.uri, {
-          selection: item.selectionRange,
-          viewColumn: vscode.ViewColumn.One,
-        });
-      } else if (message.type === 'expand' && graph.nodes.has(message.id) && !busy) {
-        busy = true;
-        await graph.expand(message.id);
-        await enrich();
-        send();
-      }
-    } catch {
-      send(
-        message.type === 'open'
-          ? 'Could not open this source location.'
-          : 'Could not load calls. Check language support, then retry.',
-      );
     } finally {
-      if (message.type === 'expand') busy = false;
+      busy = false;
     }
+  };
+  const listener = mapMessages(vscode, panel, live, editing, state, {
+    initialize,
+    cancelLoad: () => {
+      if (loadToken) loadToken.isCancellationRequested = true;
+      busy = false;
+      post({ type: 'loading', status: 'cancelled', message: 'Loading cancelled.' });
+    },
+    expand,
+    refresh,
+    send,
+    reveal: () => {
+      if (!disposed) panel.reveal(panel.viewColumn, false);
+    },
   });
   panel.onDidDispose(() => {
     disposed = true;
-    listener.dispose();
-    liveListener.dispose();
-    diagnosticsListener.dispose();
+    if (loadToken) loadToken.isCancellationRequested = true;
+    for (const item of [listener, liveListener, diagnosticsListener, sourceListener])
+      item.dispose();
   });
   panel.webview.html = render(panel.webview, context.extensionUri);
 }

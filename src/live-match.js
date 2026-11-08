@@ -43,7 +43,8 @@ function liveSnapshot(graph, state) {
     metric.cpuMs += record.cpuMs || 0;
     metric.lastSeen = Math.max(metric.lastSeen || 0, record.lastSeen || 0);
   }
-  const stack = state.frames.map((frame) => matchFunction(graph, frame.uri, frame.position));
+  const stackGraph = state.stepItems ? { items: state.stepItems } : graph;
+  const stack = state.frames.map((frame) => matchFunction(stackGraph, frame.uri, frame.position));
   const logs = {};
   const unmatchedLogs = [];
   for (const entry of state.logs || []) {
@@ -62,6 +63,7 @@ function liveSnapshot(graph, state) {
     metrics,
     active,
     current: stack[0],
+    currentName: graph.nodes?.get(stack[0])?.name,
     edges,
     logs,
     unmatchedLogs,
@@ -69,6 +71,7 @@ function liveSnapshot(graph, state) {
     timing: state.timing,
     countLabel: state.countLabel,
     profileMode: state.profileMode,
+    step: state.step,
   };
 }
 

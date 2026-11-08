@@ -20,6 +20,11 @@ function mergeDiagnostics(entries) {
 function withNodeInfo(graph, live, diagnostics) {
   return {
     ...graph,
+    classEntries: graph.classEntries?.map((info) => ({
+      ...info,
+      diagnostics: diagnostics.classes?.[info.id] || [],
+      severity: severity(diagnostics.classes?.[info.id] || []),
+    })),
     nodes: graph.nodes.map((node) => {
       const issues = diagnostics.functions?.[node.id] || [];
       const classIssues = diagnostics.classes?.[node.classInfo?.id] || [];

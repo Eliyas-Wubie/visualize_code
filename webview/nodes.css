@@ -1,0 +1,213 @@
+.function-card {
+  width: 280px;
+  min-height: 140px;
+  padding: 0 14px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  color: var(--ui-text);
+  background: var(--ui-panel);
+  box-shadow: 0 3px 10px #0002;
+}
+.node-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin: 0 -14px 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ui-border);
+  border-radius: 9px 9px 0 0;
+  --category: var(--ui-accent);
+}
+.category-function {
+  --category: var(--ui-success);
+}
+.category-file {
+  --category: #8bbefc;
+}
+body.vscode-light .category-file,
+body.vscode-high-contrast-light .category-file {
+  --category: #275fa2;
+}
+.category-flow {
+  --category: var(--ui-warning);
+}
+.category-icon {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--category), transparent 90%);
+  color: var(--category);
+  border-radius: 6px;
+}
+.node-kind {
+  color: var(--ui-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+.entry-badge {
+  font-size: 9px;
+  color: var(--ui-success);
+  border: 1px solid color-mix(in srgb, var(--ui-success), transparent 65%);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.node-heading .node-edit {
+  margin-left: auto;
+  float: none;
+  background: transparent;
+  border-color: transparent;
+  min-height: 25px;
+  padding: 4px;
+}
+.function-name {
+  display: block;
+  text-align: left;
+  min-height: 26px;
+  width: 100%;
+  max-width: 100%;
+  padding: 3px 0;
+  color: var(--ui-text);
+  border: 0;
+  background: transparent;
+  font: 600 14px/1.5 var(--vscode-editor-font-family, monospace);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.function-name:hover:not(:disabled) {
+  color: var(--ui-accent);
+  background: transparent;
+}
+.file {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ui-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.parameters {
+  font: 11px/1.6 var(--vscode-editor-font-family, monospace);
+  color: var(--ui-text);
+  padding: 5px 8px;
+  margin: 6px 0;
+  border: 1px solid var(--ui-border);
+  border-radius: 5px;
+  background: var(--ui-input);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 48px;
+  overflow: auto;
+}
+.node-footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-top: 8px;
+  margin-top: 5px;
+  border-top: 1px solid var(--ui-border);
+  font-size: 10px;
+  color: var(--ui-muted);
+}
+.follow {
+  min-height: 24px;
+  padding: 3px 7px;
+}
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--ui-bg);
+  background: var(--ui-muted);
+}
+.react-flow__node.selected .function-card {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+.react-flow__node.dragging .function-card {
+  box-shadow: var(--ui-shadow);
+}
+.class-name {
+  font-size: 10px;
+  color: var(--ui-accent);
+  margin: 3px 0;
+  overflow-wrap: anywhere;
+}
+.class-methods {
+  max-height: 88px;
+  overflow: auto;
+  margin-top: 8px;
+  border-top: 1px solid var(--ui-border);
+  padding-top: 5px;
+}
+.method {
+  display: block;
+  width: 100%;
+  min-height: 27px;
+  padding: 5px 6px;
+  font: 11px/1.5 var(--vscode-editor-font-family, monospace);
+  text-align: left;
+  border: 0;
+  background: transparent;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.complexity-badge {
+  display: inline-flex;
+  gap: 5px;
+  padding: 2px 6px;
+  margin: 4px 0;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  color: var(--ui-text);
+  font: 10px/1.5 var(--vscode-editor-font-family, monospace);
+}
+.complexity-caption {
+  color: var(--ui-muted);
+  font-family: var(--vscode-font-family, sans-serif);
+}
+.node-runtime {
+  min-height: 18px;
+}
+.live-stack,
+.live-metrics {
+  font-size: 10px;
+  margin-top: 4px;
+  color: var(--ui-warning);
+}
+.live-metrics {
+  color: var(--ui-muted);
+}
+.function-card.live-observed {
+  border-color: var(--ui-success);
+}
+.function-card.live-active {
+  border-color: var(--ui-warning);
+}
+.function-card.live-recent {
+  animation: live-pulse 0.7s ease-out;
+}
+@keyframes live-pulse {
+  from {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-success), transparent 50%);
+  }
+  to {
+    box-shadow: 0 3px 10px #0002;
+  }
+}
+.function-card.severity-warning {
+  border-color: var(--ui-warning);
+}
+.function-card.severity-error {
+  border-color: var(--ui-error);
+}
+.issue-label {
+  display: inline-block;
+  color: var(--ui-warning);
+  font-size: 10px;
+  margin: 3px 0;
+}
+.severity-error .issue-label {
+  color: var(--ui-error);
+}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.6
+
+- Add source creation and editing, automatic reference renaming, and saved changes.
+- Add step execution with automatic function breakpoints and clear execution highlighting.
+- Improve the workspace interface, downward branch layout, and canvas stability.
+- Wait for language support with loading progress, cancellation, and retry.
+
 ## 0.0.4 ? Unreleased
 
 - Embed the demo video player at the top of the extension description.

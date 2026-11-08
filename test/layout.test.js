@@ -28,11 +28,24 @@ test('shared callees, cycles and recursion remain single nodes with all connecti
   assert.equal(new Set(result.nodes.map((node) => JSON.stringify(node.position))).size, 4);
 });
 
-test('layout retains original host IDs without exposing them as React Flow IDs', () => {
+test('layout retains host IDs with stable encoded React Flow IDs', () => {
   const id = '["file:///folder/a.js",0,0,"main"]';
   const result = layout({ root: id, nodes: [{ id }], edges: [] });
-  assert.equal(result.nodes[0].id, 'fn-0');
+  assert.equal(result.nodes[0].id, `fn-${encodeURIComponent(id)}`);
   assert.equal(result.nodes[0].data.hostId, id);
+});
+
+test('reordering sibling functions preserves their identities and connection endpoints', () => {
+  const graph = {
+    root: 'main',
+    nodes: ['main', 'a', 'b'].map((id) => ({ id, name: id })),
+    edges: [{ from: 'main', to: 'a', lines: [1] }],
+  };
+  const before = layout(graph);
+  const after = layout({ ...graph, nodes: [graph.nodes[0], graph.nodes[2], graph.nodes[1]] });
+  const identity = (nodes) => Object.fromEntries(nodes.map((node) => [node.data.hostId, node.id]));
+  assert.deepEqual(identity(after.nodes), identity(before.nodes));
+  assert.equal(after.edges[0].target, before.edges[0].target);
 });
 
 test('function nodes qualify class methods and expose the owning class', () => {

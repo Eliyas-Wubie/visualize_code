@@ -1,4 +1,5 @@
 const { SYMBOL_KINDS } = require('./symbol-kinds');
+const { classDeclarations } = require('./class-declarations');
 
 /** Check whether a document symbol contains the callable's source position. */
 function contains(range, position) {
@@ -10,19 +11,39 @@ function contains(range, position) {
 function createClassResolver(provideSymbols, label, classKind = SYMBOL_KINDS.Class) {
   const files = new Map();
   const locations = new Map();
+  const declarations = new Map();
+  const read = (uri) => {
+    const key = uri.toString();
+    if (!files.has(key))
+      files.set(
+        key,
+        Promise.resolve()
+          .then(() => provideSymbols(uri))
+          .then((symbols) => {
+            for (const { selection, info } of classDeclarations(symbols, uri, label, classKind)) {
+              declarations.set(info.id, info);
+              locations.set(info.id, { uri, selectionRange: selection });
+            }
+            return symbols;
+          }),
+      );
+    return files.get(key);
+  };
   const enrich = async (graph) => {
+    await Promise.all(
+      (graph.sourceUris || []).map((uri) =>
+        read(uri).catch(() => {
+          files.delete(uri.toString());
+        }),
+      ),
+    );
     const pending = [...graph.nodes.values()].filter((node) => node.classInfo === undefined);
     await Promise.all(
       pending.map(async (node) => {
         const item = graph.items.get(node.id);
         const uri = item.uri.toString();
-        if (!files.has(uri))
-          files.set(
-            uri,
-            Promise.resolve().then(() => provideSymbols(item.uri)),
-          );
         try {
-          const symbols = await files.get(uri);
+          const symbols = await read(item.uri);
           let owner;
           const visit = (entries, parents = []) => {
             for (const symbol of entries || []) {
@@ -46,15 +67,7 @@ function createClassResolver(provideSymbols, label, classKind = SYMBOL_KINDS.Cla
             selection.start.line,
             selection.start.character,
           ]);
-          locations.set(id, { uri: item.uri, selectionRange: selection });
-          node.classInfo = {
-            id,
-            name: owner.symbol.name,
-            qualifiedName: owner.path.join('.'),
-            file: label(item.uri),
-            line: selection.start.line + 1,
-            range: owner.symbol.range || owner.symbol.location?.range,
-          };
+          node.classInfo = declarations.get(id);
         } catch {
           node.classInfo = null;
           node.classError = 'Class information unavailable';
@@ -63,7 +76,7 @@ function createClassResolver(provideSymbols, label, classKind = SYMBOL_KINDS.Cla
       }),
     );
   };
-  return { enrich, locations };
+  return { enrich, locations, declarations };
 }
 
 module.exports = { createClassResolver };

@@ -1,0 +1,122 @@
+/* Shared workspace tokens; VS Code light/high-contrast themes override the neutral defaults. */
+:root {
+  --ui-bg: #101114;
+  --ui-panel: #191a1f;
+  --ui-raised: #23242b;
+  --ui-input: #131419;
+  --ui-border: #34353e;
+  --ui-text: #eeeef4;
+  --ui-muted: #a7a7b7;
+  --ui-accent: #b8a3ff;
+  --ui-primary: #7151d9;
+  --ui-grid: #34353d;
+  --ui-edge: #787a8c;
+  --ui-success: #7ad9b0;
+  --ui-warning: #ffd18b;
+  --ui-error: #ff919a;
+  --ui-shadow: 0 8px 28px #0003;
+  color-scheme: dark;
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: 12px;
+  color: var(--ui-text);
+  background: var(--ui-bg);
+}
+body.vscode-light,
+body.vscode-high-contrast-light {
+  --ui-bg: #f6f6f9;
+  --ui-panel: #fff;
+  --ui-raised: #ededf3;
+  --ui-input: #f8f8fc;
+  --ui-border: #d4d4df;
+  --ui-text: #252531;
+  --ui-muted: #646475;
+  --ui-accent: #6742c7;
+  --ui-primary: #6742c7;
+  --ui-grid: #d8d8e4;
+  --ui-success: #187c58;
+  --ui-warning: #925b04;
+  --ui-error: #b92b40;
+  color-scheme: light;
+}
+body.vscode-high-contrast,
+body.vscode-high-contrast-light {
+  --ui-border: var(--vscode-contrastBorder, #fff);
+  --ui-accent: var(--vscode-focusBorder, #f5df36);
+}
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-border) transparent;
+}
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--ui-text);
+  background: var(--ui-bg);
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  color: var(--ui-text);
+  background: var(--ui-panel);
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:hover:not(:disabled) {
+  background: var(--ui-raised);
+  border-color: var(--ui-muted);
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.react-flow__node:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 3px;
+}
+button.button-primary {
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  color: #fff;
+}
+button.button-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ui-primary), white 12%);
+  border-color: var(--ui-accent);
+}
+svg {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.warning {
+  color: var(--ui-warning);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

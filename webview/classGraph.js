@@ -2,7 +2,12 @@ const { severity, mergeDiagnostics } = require('./nodeInfo');
 
 /** Group discovered callables by class; retain directed inter-class and internal call connections. */
 function classGraph(graph) {
-  const classes = new Map();
+  const classes = new Map(
+    (graph.classEntries || []).map((info) => [
+      info.id,
+      { ...info, methods: [], loaded: true, omitted: 0 },
+    ]),
+  );
   const owners = new Map();
   for (const node of graph.nodes) {
     if (!node.classInfo) continue;
@@ -23,6 +28,7 @@ function classGraph(graph) {
     group.omitted += node.omitted || 0;
     group.active = group.active || node.active;
     group.current = group.current || node.current;
+    group.visited = group.visited || node.visited;
     group.recent = group.recent || node.recent;
     group.logs = [...(group.logs || []), ...(node.logs || [])];
     group.diagnostics = mergeDiagnostics([

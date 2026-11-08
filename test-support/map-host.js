@@ -57,6 +57,8 @@ function createMapHost() {
     ViewColumn: { One: 1, Beside: 2 },
   };
   const sandbox = {
+    setTimeout,
+    clearTimeout,
     module: { exports: {} },
     require: (name) => {
       if (name === 'vscode') return vscode;
@@ -68,6 +70,11 @@ function createMapHost() {
       if (name === './classes') return require('../src/classes');
       if (name === './live-match') return require('../src/live-match');
       if (name === './diagnostics') return require('../src/diagnostics');
+      if (name === './editing') return require('../src/editing');
+      if (name === './refresh-map') return require('../src/refresh-map');
+      if (name === './map-messages') return require('../src/map-messages');
+      if (name === './map-sources') return require('../src/map-sources');
+      if (name === './map-state') return require('../src/map-state');
       if (name === './documentation') return require('../src/documentation');
       if (name === './complexity') return require('../src/complexity');
       if (name === './live')

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveSupportError } from './liveSupport';
 
-const vscode = acquireVsCodeApi();
+import { postMessage } from './host-api';
 
 /** Receive host snapshots and discover reachable calls sequentially; errors pause for retry. */
 export function useGraph() {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState({ message: 'Preparing code map…' });
   const [live, setLive] = useState({ status: 'Not running', metrics: {}, active: [], edges: [] });
   const [diagnostics, setDiagnostics] = useState({ functions: {}, classes: {} });
   const latest = useRef(graph);
@@ -17,7 +18,7 @@ export function useGraph() {
     if (pending.current) return;
     pending.current = true;
     setBusy(true);
-    vscode.postMessage({ type: 'expand', id });
+    postMessage({ type: 'expand', id });
   }, []);
   const follow = useCallback(
     (id) => {
@@ -26,9 +27,16 @@ export function useGraph() {
     },
     [request],
   );
-  const open = useCallback((id) => vscode.postMessage({ type: 'open', id }), []);
+  const open = useCallback((id) => postMessage({ type: 'open', id }), []);
+  const stop = useCallback(() => {
+    automatic.current = false;
+  }, []);
   useEffect(() => {
     const receive = (event) => {
+      if (event.data?.type === 'loading') {
+        setLoading(event.data.status === 'ready' ? undefined : event.data);
+        return;
+      }
       if (event.data?.type === 'diagnostics') {
         setDiagnostics(event.data);
         return;
@@ -44,12 +52,13 @@ export function useGraph() {
       pending.current = false;
       setBusy(false);
       setGraph(next);
+      setLoading(undefined);
       if (next.error) automatic.current = false;
       const unloaded = next.nodes.find((node) => !node.loaded);
       if (automatic.current && unloaded) request(unloaded.id);
     };
     window.addEventListener('message', receive);
-    vscode.postMessage({ type: 'ready' });
+    postMessage({ type: 'ready' });
     return () => {
       window.removeEventListener('message', receive);
       clearTimeout(launchTimer.current);
@@ -57,10 +66,19 @@ export function useGraph() {
   }, [request]);
   return {
     graph,
+    loading,
+    retryLoad: () => {
+      setLoading({ message: 'Preparing code map…' });
+      postMessage({ type: 'retryLoad' });
+    },
+    cancelLoad: () => postMessage({ type: 'cancelLoad' }),
+    refresh: () => postMessage({ type: 'refresh' }),
     busy,
     live,
     diagnostics,
-    startLive: () => {
+    nextStep: () => postMessage({ type: 'nextStep' }),
+    stopStep: () => postMessage({ type: 'stopStep' }),
+    startLive: (step = false) => {
       const error = liveSupportError(latest.current);
       if (error) {
         setLive((previous) => ({ ...previous, status: error }));
@@ -76,16 +94,14 @@ export function useGraph() {
           })),
         10000,
       );
-      vscode.postMessage({ type: 'startLive' });
+      postMessage({ type: step === true ? 'startStep' : 'startLive' });
     },
     discover: () => {
       automatic.current = true;
       const next = latest.current.nodes.find((node) => !node.loaded);
       if (next) request(next.id);
     },
-    stop: () => {
-      automatic.current = false;
-    },
+    stop,
     follow,
     open,
   };

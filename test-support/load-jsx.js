@@ -1,4 +1,4 @@
-const { readFileSync } = require('node:fs');
+const { readFileSync, existsSync } = require('node:fs');
 const { resolve, dirname } = require('node:path');
 const { runInNewContext } = require('node:vm');
 const { transformSync } = require('esbuild');
@@ -16,8 +16,11 @@ function loadJsx(file) {
     {
       module,
       exports: module.exports,
-      require: (name) =>
-        name.startsWith('.') ? loadJsx(resolve(dirname(filename), `${name}.jsx`)) : require(name),
+      require: (name) => {
+        if (!name.startsWith('.')) return require(name);
+        const path = resolve(dirname(filename), name);
+        return existsSync(`${path}.jsx`) ? loadJsx(`${path}.jsx`) : require(path);
+      },
     },
     { filename },
   );

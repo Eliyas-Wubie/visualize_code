@@ -3,7 +3,7 @@ import logging
 import time
 
 
-class Calculator:
+class Calculators:
     """Perform repeatable synthetic work."""
 
     def calculate(self, count):
@@ -19,7 +19,7 @@ class Calculator:
 
 def main():
     """Run five ticks with time for the live viewer to update."""
-    worker = Calculator()
+    worker = Calculators()
     logging.warning('Synthetic Python demonstration warning')
     for _ in range(5):
         worker.tick()

@@ -1,11 +1,18 @@
 const { matchFunction } = require('./live-match');
 
 /** Associate current VS Code diagnostics with functions or containing classes, without guessing file-wide ownership. */
-function diagnosticSnapshot(graph, getDiagnostics) {
+function diagnosticSnapshot(graph, getDiagnostics, resolver) {
   const functions = {};
   const classes = {};
   const files = new Map();
+  const owners = new Map();
   for (const item of graph.items.values()) files.set(item.uri.toString(), item.uri);
+  for (const uri of graph.sourceUris || []) files.set(uri.toString(), uri);
+  for (const [id, node] of graph.nodes)
+    if (node.classInfo)
+      owners.set(node.classInfo.id, { info: node.classInfo, uri: graph.items.get(id).uri });
+  for (const info of resolver?.declarations.values() || [])
+    owners.set(info.id, { info, uri: resolver.locations.get(info.id).uri });
   for (const [uri, source] of files) {
     for (const entry of getDiagnostics(source)) {
       const diagnostic = {
@@ -17,9 +24,8 @@ function diagnosticSnapshot(graph, getDiagnostics) {
       };
       const id = matchFunction(graph, uri, entry.range.start);
       if (id) (functions[id] ||= []).push(diagnostic);
-      for (const node of graph.nodes.values()) {
-        const info = node.classInfo;
-        if (!info || classes[info.id]?.some((existing) => existing === diagnostic)) continue;
+      for (const { info, uri: ownerUri } of owners.values()) {
+        if (ownerUri.toString() !== uri) continue;
         const range = info.range;
         const point = entry.range.start;
         const inside =

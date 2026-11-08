@@ -25,8 +25,8 @@ test('command, webview handshake, expansion, and source navigation work together
   const host = createMapHost();
   await host.commands.get('visualizeCode.fromCursor')();
   await host.receive({ type: 'ready' });
-  assert.equal(host.messages[0].capabilities.live, true);
-  const id = host.messages[0].root;
+  assert.equal(host.messages.find((message) => message.type === 'graph').capabilities.live, true);
+  const id = host.messages.find((message) => message.type === 'graph').root;
   await host.receive({ type: 'expand', id });
   assert.equal(
     host.messages.filter((message) => message.type === 'graph').at(-1).nodes[0].loaded,
@@ -53,7 +53,7 @@ test('provider errors reach the view and expansion can be retried', async () => 
   const host = createMapHost();
   await host.commands.get('visualizeCode.fromCursor')();
   await host.receive({ type: 'ready' });
-  const id = host.messages[0].root;
+  const id = host.messages.find((message) => message.type === 'graph').root;
   host.vscode.commands.executeCommand = async () => {
     throw new Error('sensitive details');
   };

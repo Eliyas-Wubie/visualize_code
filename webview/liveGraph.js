@@ -15,6 +15,7 @@ function withLive(graph, live) {
         live.status === 'Running' && Date.now() - (live.metrics?.[node.id]?.lastSeen || 0) < 1000,
       active: active.has(node.id),
       current: live.current === node.id,
+      visited: live.step?.visited.includes(node.id),
     })),
     edges: graph.edges.map((edge) => ({
       ...edge,
