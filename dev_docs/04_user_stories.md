@@ -434,3 +434,42 @@ so that language-server startup does not appear as missing functions.
 - Relevant components: src/provider-ready.js, app-scan.js, extension.js, map.js; webview/useGraph.jsx, main.jsx
 - Relevant tests: test/provider-ready.test.js, extension.test.js, map-root.test.js
 - Last updated: 2026-11-08
+
+## US-021 ? Partial App Maps
+
+As a developer,
+I want usable files to remain visible when another app file cannot be analyzed,
+so that one file does not block the whole app map.
+
+### Acceptance Criteria
+
+- [x] Valid empty symbol lists are accepted without a missing-provider warning.
+- [x] Failed files produce notices while other files remain mapped.
+- [x] Total scan failure keeps an explicit retry state.
+- [x] Cancellation prevents partial cancelled results from publishing.
+
+### Implementation
+
+- Status: Implemented
+- Relevant components: src/provider-ready.js, src/app-scan.js
+- Relevant tests: test/app-scan.test.js, test/provider-ready.test.js
+- Last updated: 2026-11-09
+
+## US-022 ? Correct Sample Launch Targets
+
+As a developer,
+I want sample file maps to run their own code,
+so that Step run does not launch the extension development host accidentally.
+
+### Acceptance Criteria
+
+- [x] Selected JavaScript/Python files bypass extension-host application choices.
+- [x] Whole extension-app choices include runnable files as well as launch configurations.
+- [x] Extension-host choices explicitly identify the new window they launch.
+
+### Implementation
+
+- Status: Implemented
+- Relevant components: src/launch-targets.js, src/launch-options.js
+- Relevant tests: test/launch-targets.test.js
+- Last updated: 2026-11-09

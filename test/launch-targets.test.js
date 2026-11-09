@@ -97,3 +97,38 @@ test('Python profiling preserves module arguments and existing environment; brow
   assert.equal(browser.type, 'pwa-chrome');
   assert.equal(browser.env, undefined);
 });
+
+test('selected JS and Python file maps bypass extension-host launch choices', async () => {
+  const configuration = {
+    name: 'Run Execution Visualizer',
+    type: 'extensionHost',
+    request: 'launch',
+  };
+  const vscode = host(undefined, [configuration]);
+  vscode.window.showQuickPick = async () => {
+    throw new Error('Unexpected launch picker');
+  };
+  for (const file of ['sample/live.js', 'sample/python/main.py']) {
+    const app = {
+      folder: { uri: { fsPath: '/repo' } },
+      root: '.',
+      framework: 'VS Code extension',
+      selectedFile: file,
+    };
+    const target = await chooseLaunch(vscode, { fsPath: '/repo/' + file }, app);
+    assert.equal(target.configuration.program, '/repo/' + file);
+    assert.equal(target.configuration.type, file.endsWith('.py') ? 'debugpy' : 'node');
+  }
+});
+
+test('whole extension app picker includes runnable files and explicitly labels extension-host launches', async () => {
+  const { launchOptions } = require('../src/launch-options');
+  const app = {
+    framework: 'VS Code extension',
+    entries: ['src/extension.js'],
+    files: ['src/extension.js', 'sample/live.js'],
+  };
+  const options = launchOptions(app, [{ name: 'Run Execution Visualizer', type: 'extensionHost' }]);
+  assert(options.some((option) => option.file === 'sample/live.js'));
+  assert.match(options[0].description, /Extension Development Host/);
+});

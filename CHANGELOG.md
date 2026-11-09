@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.7
+
+- Keep usable app maps when individual files fail analysis, with file-specific notices.
+- Accept valid empty symbol results instead of treating them as provider startup failures.
+- Run selected JavaScript/Python samples directly in extension repositories.
+- Include runnable files in app launch choices and clearly label extension-host launches.
+
 ## 0.0.6
 
 - Add source creation and editing, automatic reference renaming, and saved changes.

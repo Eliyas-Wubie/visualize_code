@@ -15,7 +15,10 @@ function launchOptions(app, existing) {
   const python = ['FastAPI / Python', 'Flask / Python', 'Django / Python'].includes(app.framework);
   const options = existing.map((configuration) => ({
     label: configuration.name,
-    description: 'Existing launch configuration',
+    description:
+      configuration.type === 'extensionHost'
+        ? 'Launch extension in a new Extension Development Host'
+        : 'Existing launch configuration',
     configuration,
   }));
   if (app.scripts?.dev || app.scripts?.start || app.scripts?.serve)
@@ -36,10 +39,11 @@ function launchOptions(app, existing) {
       description: 'Start the dev server first; highlights paused browser frames',
       action: 'browser',
     });
-  const files = (app.entries || app.files || []).filter((file) =>
+  const candidates = app.framework === 'VS Code extension' ? app.files : app.entries || app.files;
+  const files = (candidates || []).filter((file) =>
     ['.py', '.js', '.cjs', '.mjs'].includes(extname(file)),
   );
-  if (!framework)
+  if (!framework || app.framework === 'VS Code extension')
     for (const file of files.slice(0, 50)) options.push({ label: file, action: 'file', file });
   return options;
 }

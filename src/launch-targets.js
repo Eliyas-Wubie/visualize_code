@@ -22,8 +22,7 @@ async function chooseLaunch(vscode, uri, app) {
     : folder?.uri.fsPath || dirname(uri.fsPath);
   const existing =
     vscode.workspace.getConfiguration?.('launch', folder?.uri).get('configurations', []) || [];
-  const framework =
-    app && ['React', 'Next.js', 'Vite / JavaScript', 'VS Code extension'].includes(app.framework);
+  const framework = app && ['React', 'Next.js', 'Vite / JavaScript'].includes(app.framework);
   const pythonFramework =
     app && ['FastAPI / Python', 'Flask / Python', 'Django / Python'].includes(app.framework);
   if (framework || pythonFramework || (app && !app.selectedFile)) {

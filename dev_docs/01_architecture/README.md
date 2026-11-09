@@ -100,3 +100,5 @@ layout-state.js distinguishes actual node/connection/root changes from metadata 
 App/file root selection correction (2026-11-08): map-root.js prefers a top-level main function, prioritizing declared entry/selected files, then another top-level function before falling back to a method. Explorer opening uses this instead of the provider insertion order. Explicit cursor/picker traces bypass this heuristic. This corrects Python files where class methods precede main in the provider results; main remains at the top and downstream calculate appears below tick.
 
 File/app maps open with loading progress while language support initializes. Symbol requests retry for up to 30 seconds per file; users can cancel or retry without accepting late cancelled results. Confirmed 2026-11-08.
+
+App-wide scans isolate per-file failures and retain usable results with file-specific notices. Valid empty symbol arrays are accepted after a one-second stabilization window for nonempty files; missing provider responses still have a 30-second timeout. All-file failures keep the retry screen. Verified 2026-11-09.

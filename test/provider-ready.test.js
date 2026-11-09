@@ -69,3 +69,15 @@ test('panel shows loading before discovery, supports retry, and ignores cancelle
     false,
   );
 });
+
+test('import-only files with parentheses return valid empty symbols instead of timing out', async () => {
+  const result = await readySymbols(
+    { commands: { executeCommand: async () => [] } },
+    {},
+    { getText: () => 'from settings import (HOST, PORT)' },
+    {},
+    { report() {} },
+    2000,
+  );
+  assert.deepEqual(result, []);
+});

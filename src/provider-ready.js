@@ -1,10 +1,10 @@
 /** Wait for cold language providers without mistaking delayed symbols for an empty file. Cancellation and timeout reject explicitly. */
 async function readySymbols(vscode, uri, document, token, progress, timeout = 30000) {
   const deadline = Date.now() + timeout;
-  const source = document?.getText?.() || '';
-  const mayDeclare = ['def ', 'class ', 'function', '=>', '('].some((part) =>
-    source.includes(part),
-  );
+  const emptySource = !document?.getText?.().trim();
+  // Empty arrays are valid for import-only/configuration files. Briefly retry cold
+  // nonempty documents, but never infer declarations from punctuation in source.
+  const settleAt = Date.now() + Math.min(1000, timeout);
   while (true) {
     if (token.isCancellationRequested) throw new Error('Scan cancelled.');
     const request = vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', uri);
@@ -23,7 +23,8 @@ async function readySymbols(vscode, uri, document, token, progress, timeout = 30
       }, 100);
       request.then(resolve, reject).finally(() => clearInterval(timer));
     });
-    if (symbols?.length || (Array.isArray(symbols) && !mayDeclare)) return symbols;
+    if (symbols?.length || (Array.isArray(symbols) && (emptySource || Date.now() >= settleAt)))
+      return symbols;
     if (Date.now() >= deadline)
       throw new Error(
         'Language support is still starting. Retry after JavaScript/TypeScript or Python/Pylance is ready.',

@@ -78,3 +78,5 @@ Function/class layouts now branch down from the starting point and spread neighb
 App and file maps prefer a top-level main function as their visual starting point when available, rather than choosing the first discovered class method. This is a naming convention, not proof of runtime entry. Trace from Cursor and Choose Starting Function keep the function explicitly selected by the user.
 
 File/app maps open with loading progress while language support initializes. Symbol requests retry for up to 30 seconds per file; users can cancel or retry without accepting late cancelled results. Confirmed 2026-11-08.
+
+App-wide scans isolate per-file failures and retain usable results with file-specific notices. Valid empty symbol arrays are accepted after a one-second stabilization window for nonempty files; missing provider responses still have a 30-second timeout. All-file failures keep the retry screen. Verified 2026-11-09.

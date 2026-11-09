@@ -6,6 +6,7 @@ async function scanApp(vscode, app, graph, token, progress, waitForProvider = fa
   const warnings = [];
   let unavailable = 0;
   let filesScanned = 0;
+  let failed = 0;
   const ordered = [...new Set([...(app.entries || []), ...app.files])];
   for (const file of ordered.slice(0, 300)) {
     if (token.isCancellationRequested) break;
@@ -20,7 +21,8 @@ async function scanApp(vscode, app, graph, token, progress, waitForProvider = fa
         ? await readySymbols(vscode, uri, document, token, progress)
         : await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', uri);
       if (!symbols?.length) {
-        unavailable++;
+        if (Array.isArray(symbols)) filesScanned++;
+        else unavailable++;
         continue;
       }
       const candidates = [];
@@ -69,9 +71,12 @@ async function scanApp(vscode, app, graph, token, progress, waitForProvider = fa
         }
       }
       filesScanned++;
-    } catch (error) {
-      if (waitForProvider) throw error;
-      warnings.push(`Could not analyze ${file}`);
+    } catch {
+      if (token.isCancellationRequested) break;
+      failed++;
+      warnings.push(
+        `Could not analyze ${file}. This file may be incomplete; check language support and refresh to retry.`,
+      );
     }
     if (graph.nodes.size >= graph.limit) break;
   }
@@ -83,6 +88,14 @@ async function scanApp(vscode, app, graph, token, progress, waitForProvider = fa
       `${unavailable} files returned no symbols. Python requires an enabled Python language provider such as Pylance.`,
     );
   if (token.isCancellationRequested) warnings.push('Scan cancelled; showing partial results.');
+  if (
+    waitForProvider &&
+    failed &&
+    !filesScanned &&
+    !graph.nodes.size &&
+    !token.isCancellationRequested
+  )
+    throw new Error('No source files could be analyzed.');
   return { warnings, filesScanned };
 }
 
